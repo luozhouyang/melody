@@ -9,6 +9,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 httpx = "^0.26.0"
+sqlmodel = "^0.0.14"
+mkdocs = {version = "^1.5.3", extras = ["docs"]}
+mkdocs-material = {version = "^9.5.4", extras = ["docs"]}
 
 
 [build-system]
