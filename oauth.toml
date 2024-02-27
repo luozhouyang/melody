@@ -1,0 +1,28 @@
+[[oauth.clients]]
+provider_id = "github"
+client_id = "YOUR_CLIENT_ID"
+client_secret = "YOUR_CLIENT_SECRET"
+redirect_uri = "https://yourdomain.com/oauth/github/callback"
+scopes = ["user:email"]
+code_challenge_method = "S256"
+
+[[oauth.clients]]
+provider_id = "google"
+client_id = "YOUR_CLIENT_ID"
+client_secret = "YOUR_CLIENT_SECRET"
+redirect_uri = "https://yourdomain.com/oauth/google/callback"
+scopes = ["profile", "email"]
+code_challenge_method = "S256"
+
+
+[[oauth.providers]]
+id = "github"
+auth_url = "https://github.com/login/oauth/authorize"
+token_url = "https://github.com/login/oauth/access_token"
+
+
+[[oauth.providers]]
+id = "google"
+auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
+token_url = "https://oauth2.googleapis.com/token"
+
