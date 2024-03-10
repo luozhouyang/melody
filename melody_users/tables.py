@@ -2,47 +2,9 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import JSON, TIMESTAMP, UUID, Column, String
-from sqlmodel import Field, SQLModel
+from sqlmodel import TIMESTAMP, UUID, Column, Field, SQLModel, String
 
-
-class BaseModel(SQLModel):
-    """Base model for all tables"""
-
-    tenant_id: Optional[uuid.UUID] = Field(
-        default="",
-        index=True,
-        sa_column=Column(UUID, default=uuid.uuid4),
-        description="The tenant id of the record",
-    )
-
-    created_at: Optional[datetime] = Field(
-        nullable=False,
-        default_factory=datetime.utcnow,
-        sa_column=Column(TIMESTAMP),
-        description="Timestamp of record creation",
-    )
-
-    updated_at: Optional[datetime] = Field(
-        nullable=False,
-        default_factory=datetime.utcnow,
-        sa_column=Column(TIMESTAMP),
-        description="Timestamp of record update",
-    )
-
-    deleted_at: Optional[datetime] = Field(
-        default=0,
-        nullable=False,
-        sa_column=Column(TIMESTAMP),
-        description="Timestamp of record deletion",
-    )
-
-    props: dict = Field(
-        default=None,
-        nullable=True,
-        sa_column=Column(JSON, default=None),
-        description="Additional properties of the record",
-    )
+from .common import BaseModel
 
 
 class User(BaseModel, table=True):
@@ -197,11 +159,11 @@ class OAuth2State(BaseModel, table=True):
         description="The client id of the oauth2 state",
     )
 
-    code_challenge: Optional[str] = Field(
+    code_verifier: Optional[str] = Field(
         default="",
         nullable=False,
         sa_column=Column(String, default=""),
-        description="The code challenge of the oauth2 state",
+        description="The code verifier of the oauth2 state",
     )
 
     code_challenge_method: Optional[str] = Field(
@@ -216,4 +178,56 @@ class OAuth2State(BaseModel, table=True):
         nullable=True,
         sa_column=Column(TIMESTAMP),
         description="Timestamp of oauth2 state expiration",
+    )
+
+
+class OAuth2Token(BaseModel, table=True):
+    __tablename__ = "oauth2_tokens"
+
+    user_id: uuid.UUID = Field(
+        nullable=False,
+        sa_column=Column(UUID, default=uuid.uuid4),
+        description="The user id of the oauth2 token belongs to",
+    )
+
+    provider: Optional[str] = Field(
+        default="",
+        nullable=False,
+        sa_column=Column(String, default=""),
+        description="The provider of the oauth2 token",
+    )
+
+    client_id: Optional[str] = Field(
+        default="",
+        nullable=False,
+        sa_column=Column(String, default=""),
+        description="The client id of the oauth2 token",
+    )
+
+    access_token: Optional[str] = Field(
+        default="",
+        nullable=False,
+        sa_column=Column(String, default=""),
+        description="The access token of the oauth2 token",
+    )
+
+    refresh_token: Optional[str] = Field(
+        default="",
+        nullable=False,
+        sa_column=Column(String, default=""),
+        description="The refresh token of the oauth2 token",
+    )
+
+    expires_at: Optional[datetime] = Field(
+        default=None,
+        nullable=True,
+        sa_column=Column(TIMESTAMP),
+        description="Timestamp of oauth2 token expiration",
+    )
+
+    scope: Optional[str] = Field(
+        default="",
+        nullable=False,
+        sa_column=Column(String, default=""),
+        description="The scope of the oauth2 token",
     )
