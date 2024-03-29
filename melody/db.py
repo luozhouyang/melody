@@ -5,39 +5,45 @@ import sqlalchemy as sa
 from sqlmodel import Field, SQLModel
 
 
-class BaseModel(SQLModel, table=False):
+class BaseModel(SQLModel):
 
-    tenant_id: str | None = Field(
-        nullable=True,
-        default=None,
-        comment="The tenant id of the record",
-        sa_column=sa.Column(sa.String(64), default=None),
+    class Config:
+        orm_mode = True
+
+    tenant_id: str = Field(
+        default="",
+        nullable=False,
+        title="tenant_id",
+        description="The tenant id of the record",
+        min_length=0,
+        max_length=64,
     )
 
     created_at: datetime = Field(
         nullable=False,
         default=datetime.now(timezone.utc),
-        comment="Timestamp of record creation",
-        sa_column=sa.Column(sa.TIMESTAMP, default=datetime.now(timezone.utc)),
+        title="created_at",
+        description="Timestamp of record creation",
     )
 
     updated_at: datetime = Field(
         nullable=False,
         default=datetime.now(timezone.utc),
-        comment="Timestamp of record update",
-        sa_column=sa.Column(sa.TIMESTAMP, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc)),
+        title="updated_at",
+        description="Timestamp of record update",
     )
 
     deleted_at: datetime | None = Field(
         nullable=True,
         default=None,
-        comment="Timestamp of record deletion",
-        sa_column=sa.Column(sa.TIMESTAMP, default=None),
+        title="deleted_at",
+        description="Timestamp of record deletion",
     )
 
-    props: dict | None = Field(
-        nullable=True,
-        default=None,
-        comment="Additional properties of the record",
-        sa_column=sa.Column(sa.JSON, default={}),
+    props: dict = Field(
+        nullable=False,
+        default={},
+        title="props",
+        description="Additional properties of the record",
+        sa_type=sa.JSON,
     )
