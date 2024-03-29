@@ -1,63 +1,77 @@
-import uuid
+import uuid as uuid_pkg
 from datetime import datetime
-from typing import Optional
+from enum import Enum
 
-import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlmodel import Field
 
-from ..db_base import Base
+from melody.db import BaseModel
 
 
-class User(Base):
+class UserStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    DELETED = "DELETED"
+
+
+class User(BaseModel, table=True):
     __tablename__ = "user"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        sa.UUID,
+    id: uuid_pkg.UUID = Field(
+        default=uuid_pkg.uuid4(),
         primary_key=True,
-        default=uuid.uuid4,
-        comment="The unique id of the user",
+        title="id",
+        description="The unique id of the user",
     )
 
-    username: Mapped[str] = mapped_column(
-        sa.String(64),
-        nullable=False,
+    username: str = Field(
         default="",
-        comment="The username of the user",
-    )
-
-    nickname: Mapped[str] = mapped_column(
-        sa.String(64),
         nullable=False,
-        default="",
-        comment="The nickname of the user",
+        min_length=0,
+        max_length=64,
+        title="username",
+        description="The username of the user",
     )
 
-    email: Mapped[str] = mapped_column(
-        sa.String(64),
+    nickname: str = Field(
+        default="",
         nullable=False,
-        default="",
-        comment="The email of the user",
+        min_length=0,
+        max_length=64,
+        title="nickname",
+        description="The nickname of the user",
     )
 
-    phone: Mapped[str] = mapped_column(
-        sa.String(32),
+    email: str = Field(
+        default="",
+        index=True,
         nullable=False,
-        default="",
-        comment="The phone of the user",
+        min_length=0,
+        max_length=64,
+        title="email",
+        description="The email of the user",
     )
 
-    status: Mapped[str] = mapped_column(
-        sa.String(32),
+    phone: str = Field(
+        default="",
         nullable=False,
-        default="",
-        comment="The status of the user, e.g. active, inactive, deleted",
+        min_length=0,
+        max_length=32,
+        title="phone",
+        description="The phone number of the user",
     )
 
-    last_signin_at: Mapped[Optional[datetime]] = mapped_column(
-        sa.TIMESTAMP,
-        nullable=True,
+    status: UserStatus = Field(
+        default=UserStatus.ACTIVE,
+        nullable=False,
+        title="status",
+        description="The status of the user, e.g. active, inactive, deleted",
+    )
+
+    last_signin_at: datetime | None = Field(
         default=None,
-        comment="Timestamp of last signin",
+        nullable=True,
+        title="last_signin_at",
+        description="Timestamp of last signin",
     )
 
     def has_beed_deleted(self) -> bool:
