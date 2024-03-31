@@ -1,15 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import Literal, Optional
 
-import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlmodel import Index
+from sqlmodel import Field, Index
 
-from ..db import BaseModel
-
-IdentityType = Literal["EMAIL", "PHONE", "OAUTH_GITHUB", "OAUTH_GOOGLE", "OAUTH_FACEBOOK", "OAUTH_WECHAT", "OAUTH_ALIPAY"]
-IdentityStatus = Literal["ACTIVE", "INACTIVE", "DELETED"]
+from melody.db import BaseModel
 
 
 class Identity(BaseModel):
@@ -19,49 +13,43 @@ class Identity(BaseModel):
         Index("ix_identities_user_id", "user_id", unique=False),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        sa.UUID,
-        nullable=False,
+    id: uuid.UUID = Field(
         default=uuid.uuid4(),
+        nullable=False,
         primary_key=True,
-        comment="The id of the identity",
+        description="The id of the identity",
     )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        sa.UUID,
+    user_id: uuid.UUID = Field(
         index=True,
         nullable=False,
-        comment="The user id of this identity",
+        description="The user id of this identity",
     )
 
-    iden_type: Mapped[IdentityType] = mapped_column(
-        sa.String(16),
+    iden_type: str = Field(
         nullable=False,
-        comment="Identity type, such as EMAIL, PHONE, OAUTH_GITHUB, OAUTH_GOOGLE",
+        description="Identity type, such as EMAIL, PHONE, OAUTH_GITHUB, OAUTH_GOOGLE",
     )
 
-    iden_value: Mapped[str] = mapped_column(
-        sa.String(64),
+    iden_value: str = Field(
         nullable=False,
-        comment="Identity value, such as email address, phone number, or oauth uid.",
+        description="Identity value, such as email address, phone number, or oauth uid.",
     )
 
-    credential: Mapped[str] = mapped_column(
-        sa.String(255),
-        nullable=True,
-        comment="Credential, such as a bcrypt password.",
-    )
-
-    status: Mapped[IdentityStatus] = mapped_column(
-        sa.Enum("ACTIVE", "INACTIVE", "DELETED", name="identity_status"),
-        nullable=False,
-        default="ACTIVE",
-        comment="Identity status, such as ACTIVE, INACTIVE, DELETED",
-    )
-
-    last_signin_at: Mapped[Optional[datetime]] = mapped_column(
-        sa.TIMESTAMP,
-        nullable=True,
+    credential: str | None = Field(
         default=None,
-        comment="Timestamp of last signin",
+        nullable=True,
+        description="Credential, such as a bcrypt password.",
+    )
+
+    status: str = Field(
+        default="ACTIVE",
+        nullable=False,
+        description="Identity status, such as ACTIVE, INACTIVE, DELETED",
+    )
+
+    last_signin_at: datetime | None = Field(
+        default=None,
+        nullable=True,
+        description="Timestamp of last signin",
     )
