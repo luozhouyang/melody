@@ -47,3 +47,10 @@ class BaseModel(SQLModel):
         description="Additional properties of the record",
         sa_type=sa.JSON,
     )
+
+    def is_deleted(self) -> bool:
+        if self.deleted_at is None:
+            return False
+        if self.deleted_at <= 0:
+            return False
+        return True

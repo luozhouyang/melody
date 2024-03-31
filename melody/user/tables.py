@@ -1,23 +1,16 @@
-import uuid as uuid_pkg
+import uuid
 from datetime import datetime
-from enum import Enum
 
 from sqlmodel import Field
 
 from melody.db import BaseModel
 
 
-class UserStatus(str, Enum):
-    ACTIVE = "ACTIVE"
-    INACTIVE = "INACTIVE"
-    DELETED = "DELETED"
-
-
 class User(BaseModel, table=True):
     __tablename__ = "user"
 
-    id: uuid_pkg.UUID = Field(
-        default=uuid_pkg.uuid4(),
+    id: uuid.UUID = Field(
+        default=uuid.uuid4(),
         primary_key=True,
         title="id",
         description="The unique id of the user",
@@ -60,11 +53,11 @@ class User(BaseModel, table=True):
         description="The phone number of the user",
     )
 
-    status: UserStatus = Field(
-        default=UserStatus.ACTIVE,
+    status: str = Field(
+        default="ACTIVE",
         nullable=False,
         title="status",
-        description="The status of the user, e.g. active, inactive, deleted",
+        description="The status of the user, enum: ACTIVE, INACTIVE, DELETED",
     )
 
     last_signin_at: datetime | None = Field(
@@ -73,10 +66,3 @@ class User(BaseModel, table=True):
         title="last_signin_at",
         description="Timestamp of last signin",
     )
-
-    def has_beed_deleted(self) -> bool:
-        if self.deleted_at is None:
-            return False
-        if self.deleted_at <= 0:
-            return False
-        return True
