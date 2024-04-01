@@ -1,10 +1,10 @@
 import logging
 import uuid
 
-from sqlmodel import insert, select, update
+from sqlmodel import delete, insert, select, update
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from melody import utils
-from melody.deps import database
 
 from .models import UserCreateRequest, UserPatchRequest, UserUpdateRequest
 from .tables import User
@@ -12,53 +12,48 @@ from .tables import User
 logger = logging.getLogger("melody.user")
 
 
-@database.transaction()
-async def create_user(request: UserCreateRequest) -> User:
+async def retrieve_user(session: AsyncSession, *, id: uuid.UUID) -> User | None:
+    sql = select(User).where(User.id == id)
+    logger.debug(f"retrieving user sql: {sql}")
+    user = await session.exec(sql).first()
+    logger.debug(f"retrieved user: {user}")
+    return user
+
+
+async def create_user(session: AsyncSession, *, request: UserCreateRequest) -> User:
     user = User()
     user.model_copy(update=request.model_dump())
-    rows = await database.execute(insert(User), values=user.model_dump())
-    logger.info(f"create user affected rows: {rows}")
-
-    q = select(User).where(User.id == user.id)
-    user: User = database.fetch_one(q)
-    assert user is not None
-    logger.debug(f"created user: {user.model_dump_json()}")
+    sql = insert(User).values(user.model_dump())
+    logger.debug(f"creating user sql: {sql}")
+    user: User = await session.exec(sql).one()
+    logger.debug(f"created user: {user}")
     return user
 
 
-@database.transaction()
-async def update_user(id: uuid.UUID, request: UserUpdateRequest) -> User | None:
+async def update_user(session: AsyncSession, *, id: uuid.UUID, request: UserUpdateRequest) -> User | None:
     values = request.model_dump()
     values["updated_at"] = utils.utc_now()
-    user: User = await database.execute(update(User).where(User.id == id).returning(User), values=values)
-    if not user:
-        logger.info(f"no user found by id: {id}, skipped.")
-        return None
-    logger.debug(f"updated user: {user.model_dump_json()}")
+    sql = update(User).where(User.id == id).values(values).returning(User)
+    user = await session.exec(sql).first()
+    logger.debug(f"updated user: {user}")
     return user
 
 
-@database.transaction()
-async def patch_user(id: uuid.UUID, request: UserPatchRequest) -> User | None:
-    user: User = database.fetch_one(select(User).where(User.id == id))
-    if not user:
-        logger.info(f"no user found by id: {id}, skipped.")
-        return None
-    if request.props:
-        user.props.update(request.props)
-    user.model_copy(update=request.model_dump(exclude_unset=True))
-    user.updated_at = utils.utc_now()
-    rows = await database.execute(update(User).where(User.id == id), values=user.model_dump())
-    logger.debug(f"patch user affected rows: {rows}")
+async def patch_user(session: AsyncSession, *, id: uuid.UUID, request: UserPatchRequest) -> User | None:
+    values = request.model_dump(exclude_unset=True)
+    values["updated_at"] = utils.utc_now()
+    sql = update(User).where(User.id == id).values(values).returning(User)
+    logger.debug(f"patching user sql: {sql}")
+    user = await session.exec(sql).first()
     return user
 
 
-@database.transaction()
-async def delete_user(id: uuid.UUID) -> User | None:
-    q = update(User).where(User.id == id).returning(User)
-    user: User = await database.execute(q, values={"deleted_at": utils.utc_now()})
-    if not user:
-        logger.info(f"no user found by id: {id}, skipped.")
-        return None
-    logger.debug(f"deleted user: {user.model_dump_json()}")
+async def delete_user(session: AsyncSession, *, id: uuid.UUID, soft_delete: bool = False) -> User | None:
+    if soft_delete:
+        sql = update(User).where(User.id == id).values(deleted_at=utils.utc_now(), status="DELETED").returning(User)
+    else:
+        sql = delete(User).where(User.id == id).returning(User)
+    logger.debug(f"deleting user sql: {sql}")
+    user = session.exec(sql).first()
+    logger.debug(f"deleted user: {user}")
     return user
