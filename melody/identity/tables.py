@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 
+from pydantic import SecretStr
 from sqlmodel import Field, Index
 
 from melody.db import BaseModel
@@ -36,7 +37,7 @@ class Identity(BaseModel):
         description="Identity value, such as email address, phone number, or oauth uid.",
     )
 
-    credential: str | None = Field(
+    credential: SecretStr | None = Field(
         default=None,
         nullable=True,
         description="Credential, such as a bcrypt password.",
